@@ -1,0 +1,22 @@
+---
+# Default variables used by tasks in node role.
+# Since we are using group_vars, lets keep them disabled. 
+
+
+#aws_access_key: "{{ lookup('env','AWS_ACCESS_KEY') }}"
+#aws_secret_key: "{{ lookup('env','AWS_SECRET_KEY') }}"
+#manager_count: 0
+#worker_count: 0
+#project: projectX
+#stack: docker
+#depid: 18
+#keypair: "aws_{{ depid }}"
+#instance_type: t2.micro
+#image: ami-916f59f4
+#region: us-east-2
+#security_group: "docker_swarm_{{ depid }}"
+#security_group_description: "Group for Docker Swarm Nodes with GlusterFS Replication"
+#volume_type: gp2
+#delete_on_termination: True
+#volume_size: 5
+#gluster_device_name: xvdb

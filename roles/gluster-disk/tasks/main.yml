@@ -1,0 +1,10 @@
+---
+# Check and prepare additional EBS volume for Gluster bricks across nodes
+# Create required directories and mount points on nodes 
+
+- name: Check for attached disk
+  # Requires fact gathering
+  import_tasks: chk_disk.yml
+
+- name: Prepare attached disk
+  import_tasks: prep_disk.yml

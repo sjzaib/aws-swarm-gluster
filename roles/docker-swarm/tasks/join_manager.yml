@@ -1,0 +1,23 @@
+---
+# Check for swarm status and join as manager
+# These tasks can be safely run by swarm managers including leader.
+
+# To see if swarm mode is already active. docker_info.stdout.find()
+- name: Manager - Get docker info
+  shell: docker info
+  register: docker_info
+  changed_when: False
+  tags: 
+    - deploy
+
+#- name: Manager - Output of "docker info"
+#  debug: var=docker_info
+#  tags:
+#    - debug
+
+# Initialize swarm only if its not already started.
+- name: Manager - Join swarm !
+  shell: "docker swarm join --token {{ hostvars[groups['swarm_leader'][0]]['manager_token']['stdout'] }} {{ hostvars[groups['swarm_leader'][0]]['ansible_eth0']['ipv4']['address'] }}:2377"
+  when: "docker_info.stdout.find('Swarm: inactive') != -1"
+  tags: 
+    - deploy

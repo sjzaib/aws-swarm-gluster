@@ -1,0 +1,27 @@
+---
+# Install python on targets and update the host
+
+# We separated these tasks from nodes so that we can run this on 
+# all_nodes group after we run intentory roles. Otherwise
+# we will have to create host group in the task or gather ec2_fact 
+# for this task as well. 
+
+- name: install python 2
+  raw: sudo bash -c "test -e /usr/bin/python || (sudo apt-get -yq update && apt-get install -yq python-minimal)"
+  tags:
+    - deploy
+  register: python_install
+  changed_when: '"Setting up python" in python_install.stdout |default("")'
+
+- name: Update apt cache and distribution upgrade
+  apt:
+    upgrade: dist
+    update_cache: yes
+  become: yes
+  tags: 
+    - deploy 
+
+# NOTE: We could install python on instance launch 
+# via user_data of ec2 module. But doing it like this
+# allows us to add add other OS later. OS specific tasks
+# file. 

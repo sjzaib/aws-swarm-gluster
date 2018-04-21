@@ -1,0 +1,65 @@
+---
+# Install docker-ce on all instaces
+#Following docker official installation method
+#TODO: may be we can remove uninstallation step because they are new hosts
+
+- name: Uninstalling all old versions of Dockers
+  apt:
+    name: "{{ item }}"
+    state: absent 
+    purge: yes
+  with_items:
+    - lxc-docker
+    - docker
+    - docker-engine
+    - docker.io
+  tags:
+    - deploy
+
+- name: Install common packages
+  apt: 
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+  tags:
+    - deploy
+
+
+- name: Install docker repo signing key
+  apt_key:
+    id: 0EBFCD88
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  tags: 
+    - deploy
+
+- name: Add Docker apt repository
+  apt_repository:
+    # There are some hardcode values, need to make them varaible
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+    state: present
+  tags: 
+    - deploy
+
+- name: Install docker-ce
+  apt:
+    name: docker-ce={{ docker_version }}
+    state: present
+    update_cache: yes
+  tags: 
+    - deploy
+
+# So that we can run all docker commands as default user ubuntu.
+- name: Add default ubuntu user to docker group
+  user: 
+    name: ubuntu
+    groups: docker
+    append: yes
+  notify: restart docker
+  tags: 
+    - deploy 
+

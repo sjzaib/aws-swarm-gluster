@@ -1,0 +1,31 @@
+---
+# Before installing anything on launched instances, make sure SSH is ready.
+# TODO: May be combine these tasks into one by running on all instances. 
+
+# Manager instances
+- name: Waiting for SSH on Manager
+  wait_for:
+    host: "{{ item.public_dns_name }}"
+    port: 22
+    state: present
+    search_regex: OpenSSH
+    delay: 10
+    timeout: 300
+  with_items: "{{ ec2_swarm_manager.tagged_instances }}"
+  tags:
+    - deploy
+    - sshwait
+
+# Worker instances
+- name: Waiting for SSH on Workers
+  wait_for:
+    host: "{{ item.public_dns_name }}"
+    port: 22
+    state: present
+    search_regex: OpenSSH
+    delay: 10
+    timeout: 300
+  with_items: "{{ ec2_swarm_worker.tagged_instances }}"
+  tags: 
+    - deploy
+    - sshwait

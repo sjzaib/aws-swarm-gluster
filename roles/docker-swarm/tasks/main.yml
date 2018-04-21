@@ -1,0 +1,27 @@
+---
+# Creates docker swarm
+
+# group_names is a magic variable as defined by ansible docs. Its a list of all groups current host
+# is a member of. So if current host's list group_names contains a group by the name of swarm_leader 
+# this means this current host is a swarm leader and hence import tasks for leader. 
+# The way we create our inventory from inventory role makes 1 manager host a member of 2 groups swarm_leader,
+# swarm_manager and all_nodes plus the default "all"
+
+# Runs on swarm_leader only
+- name: Include swarm leader role when host is leader
+  import_tasks: leader.yml
+  when: "'swarm_leader' in group_names"
+
+# Runs on swarm_worker only
+- name: Join as worker when host is worker
+  import_tasks: join_worker.yml
+  when: "'swarm_workers' in group_names"
+
+# In docker swarm, manager nodes are also worker nodes by default. So we dont need
+# to make manager node join the cluster via worker token. If a node is joined by manager token or
+# if the node initiate the swarm (swarm init) its a manager and worker by default. 
+
+# Runs on swarm_managers only
+- name: Joing as manager when host is manager
+  import_tasks: join_manager.yml
+  when: "'swarm_managers' in group_names"

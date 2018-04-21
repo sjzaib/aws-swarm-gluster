@@ -1,0 +1,8 @@
+---
+# Install gluster when OS is ubuntu 16.04 64bit 
+# Requires fact gathering
+- name: Install gluster on Ubuntu
+  import_tasks: ubuntu.yml
+  when: "(ansible_distribution == 'Ubuntu') and (ansible_distribution_version == '16.04')"
+
+# TODO: add for Redhad or CentOS

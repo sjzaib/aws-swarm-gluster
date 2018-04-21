@@ -1,0 +1,11 @@
+---
+# Mount gluster volume created by gluster-vol role
+
+- name: Mount formated disk on "{{ gluster_dev_mount }}"
+  mount:
+    path: "{{ gluster_vol_mount }}"
+    src: "localhost:/{{ gluster_vol_name }}" 
+    fstype: glusterfs
+    state: mounted
+  register: gluster_volume_mount
+  tags: deploy

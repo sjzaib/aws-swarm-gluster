@@ -1,0 +1,9 @@
+--- 
+# Default variables used by tasks in inventory role.
+# Since we are using group_vars, lets keep them disabled. 
+
+#aws_access_key: "{{ lookup('env','AWS_ACCESS_KEY') }}"
+#aws_secret_key: "{{ lookup('env','AWS_SECRET_KEY') }}"
+#region: us-east-2
+#project: journals
+#depid: 18

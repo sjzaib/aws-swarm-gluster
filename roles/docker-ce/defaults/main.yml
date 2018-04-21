@@ -1,0 +1,5 @@
+---
+# Default variables used by tasks in docker-ce role.
+# Since we are using group_vars, lets keep them disabled. 
+
+#docker_version: 18.03.0~ce-0~ubuntu

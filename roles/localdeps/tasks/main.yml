@@ -1,0 +1,21 @@
+
+---
+# Install python dependencies for localhost
+
+#Install pip
+- name: Install python's pip
+  apt: pkg=python-pip state=latest
+  tags:
+    - pyset
+
+#Install boto
+- name: Install boto via pip
+  pip: name=boto state=latest
+  tags:
+    - pyset
+
+#Install boto3
+- name: Install boto3 via pip
+  pip: name=boto3 state=latest
+  tags:
+    - pyset

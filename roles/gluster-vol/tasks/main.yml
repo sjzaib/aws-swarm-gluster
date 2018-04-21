@@ -1,0 +1,23 @@
+---
+# Create gluster volume from gluster bricks on different nodes 
+# Requires variable cluster_hostnames defined as localhost's hostvar
+# We set this in inventory role. 
+
+# Requires fact gathering
+- name: Create gluster volume
+  gluster_volume:
+    state: present
+    name: "{{ gluster_vol_name }}"
+    replicas: "{{ node_count }}"
+    bricks: "{{ gluster_dev_mount }}"
+    force: yes
+    options:
+      # Allow connection from localhost only 
+      auth.allow: "127.0.0.1"
+      # Only use ipv4 for communication between gluster peers. 
+      transport.address-family: "inet"  
+    cluster: 
+      "{{ hostvars['localhost']['cluster_hostnames'] }}"
+    start_on_create: yes
+  run_once: true
+  tags: deploy

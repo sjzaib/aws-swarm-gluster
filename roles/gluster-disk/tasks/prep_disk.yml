@@ -1,0 +1,29 @@
+---
+# Prepare disk and mount points for gluster volume creation and mounting
+- name: Make filesystem on raw disk
+  filesystem: 
+    fstype: "{{ gluster_dev_fstype }}"
+    dev: "/dev/{{ gluster_device_name }}"
+  tags: deploy
+
+- name: Create disk mount point - raw disk will mount here
+  file: 
+    path: "{{ gluster_dev_mount }}" 
+    state: directory
+    mode: 0755
+  tags: deploy
+
+- name: Mount formated disk on "{{ gluster_dev_mount }}"
+  mount:
+    path: "{{ gluster_dev_mount }}"
+    src: "/dev/{{ gluster_device_name }}"
+    fstype: "{{ gluster_dev_fstype }}"
+    state: mounted
+  tags: deploy
+
+- name: Create gluster volume mount point - gluster volume will mount here
+  file: 
+    path: "{{ gluster_vol_mount }}" 
+    state: directory
+    mode: 0755
+  tags: deploy

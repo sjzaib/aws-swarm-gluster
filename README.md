@@ -4,7 +4,7 @@ This ansible playbook deploys docker swarm cluster on AWS with distributed stora
 
 ## Description:
 
-Playbook will launch few Linux instances on AWS, installs docker and create swarm. All instances will be launched with an additional 5GB SSD EBS volume attached. These EBS disks will eventually form a gluster replicated volume. Gluster volume will be available at /swarm/volumes on each node. You can use this volume to launch docker services with shared volumes for high availibility. For example you can mount volume /swarm/volumes/html:/var/www/html for your apache2 serivce and content of /swarm/volumes/html will be available to all containers of this service, which allows you can easily scale up or down the service.
+Playbook will launch few Linux instances on AWS, installs docker and create swarm. All instances will be launched with an additional 5GB SSD EBS volume attached. These EBS disks will eventually form a gluster replicated volume. Gluster volume will be available at /swarm/volumes on each node. You can use this volume to launch docker services with shared volumes for high availibility. For example you can mount volume /swarm/volumes/html:/var/www/html for your apache2 serivce and content of /swarm/volumes/html will be available to all containers of the service.
 
 Sequence of tasks (in a nutshell): 
 
@@ -97,7 +97,7 @@ Once you have your aws credentials defined. The simplest way to launch cluster i
 
 
 ```shell
-ansible-playbook playbook.yml -t deploy,pyset -e 'depid=01'
+ansible-playbook launch.yml -t deploy,pyset -e 'depid=01'
 ```
 
 Tags allow to run/omit group of tasks from playbook. Tag "pyset" installs any required python dependencies your ansible controller host may be missing, such as pip, boto and boto3. You can omit this tag on your next run.  
@@ -143,7 +143,7 @@ Most significant variable is "depid". Value of this variable is attached to many
 You can dismantle your entire cluster and all associated artifacts such as security groups and aws keys with
 
 ```shell
-ansible-playbook nodes-rm.yml -t remove -e 'depid=01'
+ansible-playbook destroy.yml -t remove -e 'depid=01'
 ```
 
 Except private key .pem file that is saved under key/ directory. This is to avoid accidental removal of critical information. If you must, remove it manually.

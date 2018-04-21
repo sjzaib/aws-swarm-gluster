@@ -1,0 +1,15 @@
+---
+# Check for extra disk and make sure disk size is same across cluster
+# Requires fact gathering
+- name: Is extra disk attached ?
+  fail:
+    msg: Gluster disk is missing
+  when: 'gluster_device_name not in ansible_devices'
+  tags: deploy
+
+- name: Is disk size same across nodes ?
+  fail:
+    msg: Gluster disk size is not same across nodes
+  # jinja2 warnings resolved with https://stackoverflow.com/questions/46209556/how-can-i-use-ansible-nested-variable  
+  when: "hostvars[inventory_hostname]['ansible_devices'][gluster_device_name]['size'] != gluster_disk_size"
+  tags: deploy

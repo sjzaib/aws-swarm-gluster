@@ -1,0 +1,9 @@
+--- 
+# Default variables used by tasks in gluster-disk role.
+# Since we are using group_vars, lets keep them disabled. 
+
+#gluster_device_name: xvdb
+#gluster_disk_size: "{{ volume_size }}.00 GB"
+#gluster_dev_fstype: xfs
+#gluster_dev_mount: /gluster/data
+#gluster_vol_mount: /swarm/volumes 

@@ -1,0 +1,22 @@
+---
+# Check for swarm status and join as worker node. 
+
+  # To see if swarm mode is already active
+- name: Worker - Get docker info
+  shell: docker info
+  register: docker_info
+  changed_when: False
+  tags: 
+    - deploy
+
+#- name: Output of "docker info" for workers (ALL)
+#  debug: var=docker_info
+#  tags: 
+#    - debug
+
+# Join as worker only if not already a swarm member. Idempotency
+- name: Worker - Join swarm 
+  shell: "docker swarm join --token {{ hostvars[groups['swarm_leader'][0]]['worker_token']['stdout'] }} {{ hostvars[groups['swarm_leader'][0]]['ansible_eth0']['ipv4']['address'] }}:2377"
+  when: "docker_info.stdout.find('Swarm: inactive') != -1"
+  tags: 
+    - deploy

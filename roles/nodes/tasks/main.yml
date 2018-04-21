@@ -1,0 +1,24 @@
+---
+# Launch host machines on AWS.  
+# TODO: Find a way to tag volume
+# TODO: create separate VPC and subnet 
+
+# Add security group
+- name: Create Security Group
+  import_tasks: sec_group.yml
+
+# Create ssh keys
+- name: Create SSH Keys for EC2
+  import_tasks: ssh_keys.yml
+ 
+# Launch EC2 instances as Manager nodes 
+- name: Launch Manager Nodes
+  import_tasks: managers.yml
+
+# Launch EC2 instances as Worker nodes
+- name: Launch Worker Nodes
+  import_tasks: workers.yml
+
+# Wait for SSH on all launched nodes to become available
+- name: Wait for SSH 
+  import_tasks: ssh_wait.yml

@@ -1,0 +1,7 @@
+---
+# Handler for docker-ce role
+
+- name: restart docker 
+  service: 
+    name: docker
+    state: started

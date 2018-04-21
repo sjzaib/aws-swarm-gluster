@@ -1,0 +1,42 @@
+---
+# Generate new SSH keys
+
+# Check if associated private key file is present on filesystem
+- name: SSH key pair present ? 
+  stat: 
+    path: "{{ ansible_ssh_private_key_file }}"
+  register: key_present
+  tags: 
+    - deploy
+    - mykey
+
+# If not found create new RSA key, save private key file and upload 
+# public key file to aws
+
+
+- block:  
+  - name: Create a new keypair.
+    # ec2_key module requires boto3
+    ec2_key:
+      name: "{{ keypair }}"
+      region: "{{ region }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      aws_access_key: "{{ aws_access_key }}"
+    register: newkeypair
+    tags: 
+      - deploy
+      - mykey
+
+  - name: Save key to file
+    copy: 
+      dest: "{{ ansible_ssh_private_key_file }}"
+      content: "{{ newkeypair.key.private_key }}"
+      mode: 0600
+    when: 'newkeypair.changed'
+    tags: 
+      - deploy
+      - mykey 
+
+  when: 'key_present.stat.exists == false'
+
+#TODO: if private key exists, upload public key on AWS if not exist. 

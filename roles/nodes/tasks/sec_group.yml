@@ -1,0 +1,32 @@
+---
+# Launch security group in which our instances will live
+
+- name: Create Security Group
+  ec2_group: 
+    name: "{{ security_group }}"
+    description: "{{ security_group_description }} "
+    region: "{{ region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    # Inbound rules
+    rules: 
+
+      #1. open ssh port from anywhere
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+
+      #2. allows instances in same group to communicate on all ports - private subnet
+      # swarm and gluster both requires certain port.
+      - proto: all
+        group_name: "{{ security_group }}"
+
+    # Outbound rules
+    rules_egress: 
+      - proto: all
+        from_port: all
+        to_port: all 
+        cidr_ip: 0.0.0.0/0
+  register: ec2_sec_group
+

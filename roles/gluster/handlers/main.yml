@@ -1,0 +1,7 @@
+---
+# Handlers for role "gluster"
+
+- name: restart gluster
+  service: 
+    name: glusterfs-server
+    state: started

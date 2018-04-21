@@ -1,0 +1,106 @@
+---
+# Prepare various targets from ec2 facts as host groups to be used by other roles. 
+
+# Gather ec2 facts - Requires boto3
+- name: Gathering EC2 facts.
+  ec2_instance_facts:
+    region: "{{ region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+  register: ec2_facts
+  tags: deploy
+
+
+# All of the following tasks create host groups by filtering various instance tags. 
+
+# Create a host group with public DNS names of all nodes that belongs to our deployment id and project. 
+- name: Creating hostgroup all_nodes
+  add_host:
+    name: "{{ item }}"
+    groups: all_nodes
+  with_items: 
+    "{{ ec2_facts.instances|\
+      selectattr('state.name', 'equalto', 'running')| \
+      selectattr('tags.deployment', 'defined')|\
+      selectattr('tags.deployment', 'equalto', depid)|\
+      selectattr('tags.project','defined')|\
+      selectattr('tags.project', 'equalto', project)|\
+      map(attribute='public_dns_name')|list }}"
+  changed_when: False
+  tags:
+    - deploy
+
+
+# Create a host group with public DNS names of all nodes that belongs to our deployment id and project
+# and where instance role is manager
+- name: Creating hostgroup swarm_managers
+  add_host:
+    groups: swarm_managers
+    name: "{{ item }}"
+  with_items: 
+    "{{ ec2_facts.instances|\
+      selectattr('state.name', 'equalto', 'running')|\
+      selectattr('tags.role', 'defined')|\
+      selectattr('tags.role', 'equalto', 'manager')|\
+      selectattr('tags.project', 'defined')|\
+      selectattr('tags.project', 'equalto', project)|\
+      selectattr('tags.deployment', 'defined')|\
+      selectattr('tags.deployment', 'equalto', depid)|\
+      map(attribute='public_dns_name')|list }}"
+  changed_when: False    
+  tags:
+    - deploy
+
+# Create a host group with public DNS names of all nodes that belongs to out deployment id and project. 
+# and where instance role is worker
+- name: Creating hostgroup swarm_workers
+  add_host:
+    groups: swarm_workers
+    name: "{{ item }}"
+  with_items: 
+    "{{ ec2_facts.instances|\
+      selectattr('state.name', 'equalto', 'running')|\
+      selectattr('tags.role', 'defined')|\
+      selectattr('tags.role', 'equalto', 'worker')|\
+      selectattr('tags.project', 'defined')|\
+      selectattr('tags.project', 'equalto', project)|\
+      selectattr('tags.deployment', 'defined')|\
+      selectattr('tags.deployment', 'equalto', depid)|\
+      map(attribute='public_dns_name')|list }}"
+  changed_when: False    
+  tags:
+    - deploy
+
+# Create a host group with public DNS name of first node that belongs to our deployment id and project. 
+# and where instance role is manager. This is our way of choosing our swarm leader.
+- name: Creating hostgroup swarm_leader
+  add_host:
+    groups: swarm_leader
+    name: "{{ item }}"
+  with_items: 
+    "{{ ec2_facts.instances|\
+      selectattr('state.name', 'equalto', 'running')|\
+      selectattr('tags.role', 'defined')|\
+      selectattr('tags.role', 'equalto', 'manager')|\
+      selectattr('tags.project', 'defined')|\
+      selectattr('tags.project', 'equalto', project)|\
+      selectattr('tags.deployment', 'defined')|\
+      selectattr('tags.deployment', 'equalto', depid)|\
+      map(attribute='public_dns_name')|list|first }}"
+  changed_when: False
+  tags:
+    - deploy
+
+# Create a LIST of private DNS names of all nodes and set that list as fact. Private IPs will be 
+# required for cluster internal communication. For docker swarm and gluster. 
+- name: Setting fact as cluster_hostnames
+  set_fact: 
+    cluster_hostnames: "{{ ec2_facts.instances|\
+      selectattr('state.name', 'equalto', 'running')|\
+      selectattr('tags.project', 'defined')|\
+      selectattr('tags.project', 'equalto', project)|\
+      selectattr('tags.deployment', 'defined')|\
+      selectattr('tags.deployment', 'equalto', depid)|\
+      map(attribute='private_dns_name')|list }}"
+  tags: 
+    - deploy

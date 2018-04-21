@@ -1,0 +1,12 @@
+[localhost]
+127.0.0.1
+
+[all_nodes]
+
+[swarm_managers]
+
+[swarm_workers]
+
+[swarm_leader]
+
+

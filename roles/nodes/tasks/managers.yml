@@ -1,0 +1,48 @@
+---
+# Launching EC2 instance as swarm manager with additional ebs volume
+
+# We are using "ec2" module instead of "ec2_instance" module because we need count capability 
+# provided by exact_count variable to lauch as many instances as we like. This looping capability 
+# is not yet available with ec2_instance module.
+
+- name: Launch & Tag Managers - "{{ manager_count }}" nodes
+  ec2: 
+     key_name: "{{ keypair }}"
+     group: "{{ security_group }}"
+     instance_type: "{{ instance_type }}"
+     image: "{{ image }}"
+     wait: true
+     region: "{{ region }}"
+     instance_tags:
+         Name: "Manager-{{ depid }}"   
+         role: manager
+         project: "{{ project }}"
+         stack: "{{ stack }}"
+         deployment: "{{ depid }}"
+     exact_count: "{{ manager_count }}"
+     count_tag:
+         role: manager
+         project: "{{ project }}"
+         stack: "{{ stack }}"
+         deployment: "{{ depid }}"
+     volumes: 
+       - device_name: "/dev/{{ gluster_device_name }}"
+         volume_type: "{{ volume_type }}"
+         volume_size: "{{ volume_size }}"
+         delete_on_termination: "{{ delete_on_termination }}"
+     aws_access_key: "{{ aws_access_key }}"
+     aws_secret_key: "{{ aws_secret_key }}"
+          
+     # Warning "unable to modify public ip assignment" is a bug
+     # https://github.com/ansible/ansible/issues/37895     
+     # assign_public_ip: "{{ assign_public_ip }}"
+  register: ec2_swarm_manager
+  tags:
+    - deploy
+
+- debug:
+    msg: "Manager - {{ item.public_dns_name }}"
+  with_items: "{{ ec2_swarm_manager.tagged_instances }}"
+  tags:
+    - deploy
+    

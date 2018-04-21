@@ -1,0 +1,6 @@
+---
+# Defaults for gluster-vol role
+
+#gluster_vol_name: swarm_vol
+#gluster_dev_mount: /gluster/data
+node_count: "{{ manager_count + worker_count }}"

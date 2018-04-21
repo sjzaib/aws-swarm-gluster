@@ -1,0 +1,97 @@
+---
+#Remove previously launched instances and related artifacts for particular deployment
+# Call the play with -e 'depid=<deploymentid>'
+- name: Removing Nodes
+  hosts: localhost
+  gather_facts: False
+  tasks: 
+    - name: Gather EC2 facts
+      ec2_instance_facts:
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      register: ec2_facts
+      tags: remove
+
+#    - name: show vars
+#      debug: var=ec2_facts
+#      tags: 
+#        - remove
+
+
+    - name: Build kill list 
+      set_fact: 
+        instances_r: "{{ ec2_facts.instances|\
+          selectattr('state.name', 'equalto', 'running')|\
+          selectattr('tags.project', 'defined')|\
+          selectattr('tags.project', 'equalto', project)|\
+          selectattr('tags.stack', 'defined')|\
+          selectattr('tags.stack', 'equalto', stack)|\
+          selectattr('tags.deployment', 'defined')|\
+          selectattr('tags.deployment', 'equalto', depid)|\
+          map(attribute='instance_id')|list }}"
+      tags: remove
+    - name: debug instances
+      debug: var=instances_r
+      tags: remove
+
+    - name: Got kill list ?
+      fail:
+        msg: May be you forgot to provide deployment id with [-e 'depid=15']
+      when: "hostvars['localhost']['instances_r'] | length <= 0"
+      tags: remove
+
+    #Removing instances for a particular deployment
+    - name: Kill instances
+      ec2: 
+        state: absent
+        instance_ids: "{{ instances_r }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        wait: true
+      register: removed_instances
+      tags: remove
+
+    - debug: 
+        msg: Following instances removed - "{{ removed_instances.instance_ids }}"
+      tags: remove
+
+
+    # Remove security group - tag removesg
+    - name: Remove security group by name
+      ec2_group: 
+        name: "{{ security_group }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}" 
+        state: absent
+      register: removed_groups
+      tags: 
+        - remove
+        - removesg
+
+    - name: debug
+      debug: var=removed_groups
+      tags: 
+        - remove
+
+    # remove and removekey tag is required.
+    - name: Remove SSH key from AWS by name
+      ec2_key: 
+        name: "{{ keypair }}"
+        region: "{{ region }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        aws_access_key: "{{ aws_access_key }}"
+        state: absent
+      register: removed_keys
+      tags:
+        - remove 
+        - removekey
+
+    - name: debug
+      debug: var=removed_keys
+      tags:
+        - remove
+
+    # Not removing private key file from control host. This can be irreversable. Do it manually.  

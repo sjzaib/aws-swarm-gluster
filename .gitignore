@@ -1,0 +1,5 @@
+# Ignore SSH private keys
+trash/
+notes.txt
+key/*.pem
+*.pem

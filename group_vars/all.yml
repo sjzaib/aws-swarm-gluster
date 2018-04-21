@@ -1,0 +1,109 @@
+---
+############################################################################
+# All variable used by all roles plays are here in one place. You can override
+# these values at runtime with -e flag, or edit here 
+############################################################################
+
+# Ansible use python boto library to communicate with AWS API. AWS requires 
+# authentication in form of aws access and secret keys. 
+# By default we expect these to be defined in shell environment varaibles. 
+# You can use ~/.boto ~/.aws/credentials files to populate
+# your environment OR you can define AWS_ACESSS_KEY and AWS_SECRET_KEY 
+# directly in your environment, either manually or via bash script on run time.
+aws_access_key: "{{ lookup('env','AWS_ACCESS_KEY') }}"
+aws_secret_key: "{{ lookup('env','AWS_SECRET_KEY') }}"
+
+
+# Number of instances to launch in the cluster is controlled by two variables
+# manager_count and worker_count which takes integer values. 
+# Although you can set any number of nodes to take up role of manager and/or worker. 
+# But docker recommend to have odd number of managers for a swarm 
+# Docker also recommends a maximum of 7 manager nodes for a swarm.
+manager_count: 3
+worker_count: 1
+
+# Its an important variable, it applies to many of the artifacts
+# our system creates during deployment. It helps us identify and link together 
+# resources and artifacts belonging to a particular deployment. Which means 
+# we can launch multiple deployments on our aws account and still keep artifacts 
+# resources mutually exclusive. This also helps is take action on the entire cluster 
+# e.g remove an entire deployment like nodes-rm.yml playbook uses. 
+depid: 18
+
+# This acts as instance tag. You can use "project" tag to launch 
+# cluster for different projects or project versions seperate.  
+project: projectX
+
+# This is not really usefull. May be removed in future. 
+stack: docker
+
+# SSH user ansible uses to connect to nodes
+# Default is "ubuntu" because default ami is ubuntu
+ansible_ssh_user: ubuntu
+
+# Disables check for remote server fingerprint when ssh in.
+ansible_host_key_checking: False
+
+# Instance size to use. Applies to all instances in cluster.
+instance_type: t2.micro
+
+# AWS AMI to use.
+# Default is ubuntu 16.04 64bit Offcial AMI 
+# https://aws.amazon.com/blogs/aws/new-per-second-billing-for-ec2-instances-and-ebs-volumes/
+image: ami-916f59f4
+
+# AWS region to launch our cluster in
+region: us-east-2
+
+#Dockers Info
+docker_version: 18.03.0~ce-0~ubuntu
+
+# Gluster EBS volume type.
+volume_type: gp2
+
+# Delete this Gluster EBS volume with instance termination
+delete_on_termination: True
+# Gluster EBS volumes size is in GB
+volume_size: 5
+# Gluster EBS volume device name 
+gluster_device_name: xvdb
+
+# Filesystem type for Gluster disks
+gluster_dev_fstype: xfs
+
+# Where the this raw filesystem will be mounted on node
+# This will act as Gluster Bricks
+gluster_dev_mount: /gluster/data
+
+# Volume name that glusterfs will export by combining 
+# bricks from all peers
+gluster_vol_name: swarm_vol
+
+# Mount point per node for Gluster exported volume.
+gluster_vol_mount: /swarm/volumes 
+
+
+#############################################################
+# DO NOT CHANGE variable below this line as they are defined
+# in terms of other variable and does not offer any 
+# customization. Changing them may break automation logic. 
+#############################################################
+
+# Use by gluster-disk role to check gluster disk size is 
+# same across nodes. 
+gluster_disk_size: "{{ volume_size }}.00 GB"
+
+# Keypair to be used with EC2 instances. 
+# New RSA keypair will be generated for each deployment
+# associated private keys will be saved in key/ folder
+# associated public keys will be uploaded to your aws account
+keypair: "aws_{{ depid }}"
+
+# SSH private key file location. 
+ansible_ssh_private_key_file: "key/aws_{{ depid }}.pem"
+
+
+# Security group to be used for instances
+# New group will be created for each deployment
+security_group: "docker_swarm_{{ depid }}"
+security_group_description: "Group for Docker Swarm Nodes with GlusterFS Replication"

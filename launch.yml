@@ -1,0 +1,117 @@
+---
+###############################################################################
+# This playbook will launch ec2 instances in aws with an additional ebs volume.
+# It will create separate security group and ssh keys.  
+# Install dockers, Configure dockers for swarm mode
+# Install gluster and configure gluster mirrored volumes for persistent storage. 
+# Instances will be tagged with role, project, stack and deployment keys. 
+# Tags will allow you to use same code to launch multiple clusters. For example 
+# run it with -e 'depid=02' will launch a cluster, you can then launch another 
+# cluster with depip=03 and it will be manged separately.Runing playbook again 
+# with right depid will only touch the instances related to that particular depid.
+################################################################################
+
+# TODO: Check if we can use imports rather than include. 
+# http://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse.html#dynamic-vs-static
+# Includes foward tags to roles
+
+# First play: Making sure all requirement for ansible controller is there
+# This is optional, use "deploy" tag to avoid running this play.
+- name: Install Python pip, boto and boto3 library
+  become_user: root
+  any_errors_fatal: True
+  gather_facts: True
+  hosts: localhost
+  tasks:
+  - include_role:
+      name: localdeps
+  tags:
+    - pyset
+
+# Launching EC2 nodes
+- name: Launching EC2 Nodes
+  hosts: localhost
+  any_errors_fatal: True
+  gather_facts: False
+  tasks:
+  - include_role: 
+      name: nodes
+  tags:
+    - deploy
+    - ec2
+    - sshwait
+
+# After launching ec2 nodes we build inventory for rest of our playbook.
+# I notice dynamic inventory script was too slow. 
+- name: Building EC2 Inventory
+  hosts: localhost
+  gather_facts: False
+  tasks:
+  - include_role:
+      name: inventory
+  tags:
+    - deploy  
+    - inv
+
+# Installing python and updating ec2 nodes to latest packages. 
+- name: Preparing EC2 Nodes
+  hosts: all_nodes
+  any_errors_fatal: True
+  # can not gather facts untill python is installed.
+  gather_facts: False
+  tasks: 
+  - include_role: 
+      name: common
+  tags:
+    - deploy
+    - ec2
+
+# TODO: combine following to plays ?
+# Installing dockers and building swarm
+- name: Build Docker Swarm
+  hosts: all_nodes
+  any_errors_fatal: True
+  # Some modules uses hostvar for which we are gathering facts here
+  # so that we dont have to do it multiple times. 
+  # This is first time we gather facts on all_nodes
+  gather_facts: True
+  become: yes
+  tasks:
+    - include_role:
+        name: docker-ce
+    # Swarm leader, manager and worker selection already happened inside 
+    # inventory role. Needs fact gathering
+    - include_role: 
+        name: docker-swarm
+  tags:
+    - deploy
+    - docker
+
+
+# Build distributed storage on our launched instaces using Gluster file system.
+# This play uses extra ebs volume attached to instaces to create 
+# this distributed mirrored storage. It will install gluster, 
+# format disk, mount disk, create bricks, create gluster volumes, and 
+# finally mount it 
+- name: Build Gluster Cluster 
+  hosts: all_nodes
+  any_errors_fatal: True
+  become: yes
+  # Not gathering facts because we have it before. 
+  gather_facts: False
+  tasks: 
+    # Requires fact gathering
+    - include_role:
+        name: gluster
+    # Requires fact gathering
+    - include_role:
+        name: gluster-disk
+    - include_role: 
+    # Requires fact gathering
+        name: gluster-vol
+    - include_role:
+        name: gluster-mount 
+  tags:
+    - deploy
+    - gluster
+

@@ -1,0 +1,45 @@
+---
+# Initiate swarm and  get tokens
+
+- name: Leader - Get docker info
+  shell: docker info
+  register: docker_info
+  changed_when: False
+  tags: 
+    - deploy
+
+#- name: Output of "docker info" for swarm leader
+#  debug: var=docker_info
+#  tags:
+#    - debug
+
+# Initialized swarm, but only if node is NOT already a member, manager or worker 
+- name: Leader - Initiate swarm
+  shell: "docker swarm init --advertise-addr {{ ansible_eth0.ipv4.address }}"
+  when: "docker_info.stdout.find('Swarm: inactive') != -1"
+  tags: 
+    - deploy
+
+- name: Leader - Get manager token
+  shell: docker swarm join-token -q manager
+  register: manager_token
+  changed_when: False
+  tags:
+    - deploy
+
+#- name: Leader - Show worker tokens
+#  debug: var=manager_token.stdout
+#  tags: 
+#    - shtoken
+
+- name: Leader - Get worker token
+  shell: docker swarm join-token -q worker
+  register: worker_token
+  changed_when: False
+  tags:
+    - deploy         
+
+#- name: Leader - Show worker tokens
+#  debug: var=worker_token.stdout
+#  tags: 
+#    - shtoken
