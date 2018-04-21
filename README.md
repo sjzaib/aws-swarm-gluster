@@ -4,23 +4,23 @@ This ansible playbook deploys docker swarm cluster on AWS with distributed stora
 
 ## Description:
 
-Playbook will launch few Linux instances on AWS, installs docker and create swarm. All instances will be launched with an additional 5GB SSD EBS volume attached. These EBS disks will eventually form a gluster replicated volume. Gluster volume will be available at /swarm/volumes on each node. You can use this volume to launch docker services with shared volumes for high availibility. For example you can mount volume /swarm/volumes/html:/var/www/html for your apache2 serivce and content of /swarm/volumes/html will be available to all containers of the service.
+Playbook will launch few Linux instances on AWS, installs docker and create swarm. All instances will be launched with an additional 5GB SSD EBS volume attached. These EBS disks will eventually form a gluster replicated volume. Gluster volume will be available at /swarm/volumes on each node. You can use this volume to launch docker services with shared volumes requirments for high availibility. For example you can mount volume /swarm/volumes/html:/var/www/html for your apache2 serivce and content of /swarm/volumes/html will be available to all containers of the service.
 
 Sequence of tasks (in a nutshell): 
 
-1. Create aws security groups and SSH Keys
+1. Create AWS security groups and SSH Keys
 2. Launch EC2 instaces
 3. Install Docker
-4. Create Docker Sarm
+4. Create Docker Swarm
 5. Install Gluster
 6. Prepare EBS disk for Gluster
 7. Create and mount Gluster volume
 
 
-Note that, a fresh ssh key and a security group will be created for each cluster you launch. 
-Cluster will be launched in your default VPC and subnet. 
+Note that, a fresh ssh key and a security group will be created for each cluster you launch. At the moment cluster will be launched in your default VPC and default subnet. 
 
-Other defaults includes
+
+Other playbook defaults:
 
 - AWS region: us-east-2
 - Instance type: t2.micro
@@ -39,8 +39,8 @@ For complete list check group_vars/all.yml
 
 ## Requirements:
 
-1. ansible >= 2.5 installed. 
-2. python pip, boto and boto3 - but these can be installed through the playbook itself.
+1. Linux with ansible >= 2.5 installed. (Tested with ubuntu 16.04) 
+2. pip, boto and boto3 - check DEPLOY section below on how to install these.
 
 ## Usage:
 
@@ -119,14 +119,14 @@ manager_count: <integer>
 worker_count: <integer>
 ```
 
-Default is a 4 node cluster with 3 managers and 1 worker. Managers also runs containers. So all your nodes will run containers but manager nodes also have additional responsibility to manage docker swarm.
+Default is a 4 node cluster with 3 managers and 1 worker. Managers also run containers. So all your nodes will run containers but manager nodes also have additional responsibility to manage docker swarm.
 
 
 To change aws region edit group_vars/all.yml
 ```shell
 region: us-east-1
 ```
-Default region set is us-east-2
+Default region is us-east-2
 
 
 For production use you may want to protect gluster EBS volume
@@ -136,7 +136,7 @@ delete_on_termination: False
 ```
 
 
-Most significant variable is "depid". Value of this variable is attached to many resources this playbook creates. It helps to "identify" and link all artifacts of a particular deployment for idempotency.  
+Most significant variable is "depid". Value of this variable is attached to many resources this playbook creates. It helps to "identify" and link together artifacts of a particular deployment.  
 
 ### REMOVE:
 
